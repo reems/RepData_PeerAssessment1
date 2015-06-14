@@ -1,0 +1,95 @@
+# Reproducible Research Assignment 1
+### Author: Reem Sarrif
+
+This R Markdown document contains the code chunks and explanatory text required for the Reproducible Research Assignment 1.
+
+##Loading and Preprocessing the data
+In this part we start by unzipping the file to extract the "activity.csv" file, 
+then we read this into the data frame "activity".
+
+```{r}
+  unzip("activity.zip")
+  activity <- read.csv("activity.csv")
+  str(activity)
+```
+
+##What is the mean total number of steps taken per day?
+The total number of steps taken per day is calculated, and a histogram is displayed to show the total number of steps taken each day.
+
+```{r}
+  ActivitySum <- aggregate(steps ~ date, data=activity, FUN="sum", na.rm=TRUE)
+
+  hist(ActivitySum$steps, col="red")
+```
+
+Next week calculate the mean and median for total number of steps taken per day.
+Note: the code chunk for this part is hidden and results shown below.
+
+```{r activitysummaries, echo=FALSE, results="hide"}
+  dailymean <- mean(ActivitySum$steps)
+  dailymean <- format(dailymean, digits=7, nsmall=2)
+  dailymedian <- median(ActivitySum$steps)
+  dailymedian <- format(dailymedian, digits=7, nsmall=2)
+```
+
+For the total number of steps taken per day, the mean is `r dailymean` and the median is `r dailymedian`
+
+
+##What is the average daily activity pattern?
+Here we calculate the mean for number of steps taken per 5-minute interval across all days.  Results plotted as time series plot.
+
+```{r}
+  ActivitySum <- aggregate(steps ~ interval, data=activity, FUN="mean", na.rm=TRUE)
+  with(ActivitySum, plot(interval,steps, type="l"))
+```
+
+Next we find the interval with the maximum average number of steps.
+Note: the code for this chunk is hidden and findings displayed below.
+
+```{r maxinterval, echo=FALSE, results="hide"}
+  maxinterval <- ActivitySum$interval[ActivitySum$steps==max(ActivitySum$steps)]
+```
+
+The 5-minute interval on average across all days that contains the maximum number of steps is interval `r maxinterval`
+
+
+##Imputing missing values
+```{r nacount, echo=FALSE, results="hide"}
+  nacount <- nrow(activity[activity$steps=="NA",])
+```
+
+The total number of missing values in the dataset is `r nacount`
+
+```{r}
+  ActivitySum <- aggregate(steps ~ date, data=activity, FUN="mean", na.rm=TRUE)
+  activityImp <- merge(activity, ActivitySum, by="date")
+  activityImp$steps <- ifelse(is.na(activityImp$steps.x)==TRUE,activityImp$steps.y,activityImp$steps.x)
+  head(activity)
+  head(activityImp)
+  hist(activityImp$steps, col="red")
+  ActivitySumImp <- aggregate(steps ~ date, data=activityImp, FUN="sum", na.rm=TRUE)
+  
+```
+
+
+```{r activitysummaries1, echo=FALSE, results="hide"}
+  dailymeanImp <- mean(ActivitySumImp$steps)
+  dailymeanImp <- format(dailymeanImp, digits=7, nsmall=2)
+  dailymedianImp <- median(ActivitySumImp$steps)
+  dailymedianImp <- format(dailymedianImp, digits=7, nsmall=2)
+```
+
+For the total number of steps taken per day, the mean is `r dailymeanImp` and the median is `r dailymedianImp`
+
+TODO
+
+##Are there differences in activity patterns between weekdays and weekends?
+
+```{r}
+  activity$daytype <- ifelse(weekdays(as.Date(activity$date)) %in% c("Saturday","Sunday"),"weekend","weekday")
+  library(lattice)
+  xyplot(steps ~ interval | daytype, data=activity, layout = c(2,1), type="l")
+```
+
+
+
